@@ -5,14 +5,29 @@ using UnityEngine;
 
 public class Layout : MonoBehaviour
 {
-    public TextAsset layoutJSON, stateJSON;
+    public TextAsset layoutJSON, stateJSON, industryJSON;
     public LayoutConfig layout;
     public LayoutState layoutState;
+    public IndustryConfig industryConfig;
 
+    [System.Serializable]
+    public class IndustryConfig
+    {
+        public float IdleChance;
+        public CarType[] CarTypes;
+    }
+
+    [System.Serializable]
+    public class CarType
+    {
+        public string TypeName;
+        public string[] ValidCargo;
+    }
 
     [System.Serializable]
     public class LayoutState
     {
+        public int Seed;
         public StationState[] StationStates;
     }
 
@@ -20,7 +35,7 @@ public class Layout : MonoBehaviour
     public class StationState
     {
         public string Name;
-        public string[] CarsPresent;
+        public List<string> CarsPresent = new List<string>();
 
         public StationState(string name)
         {
@@ -40,6 +55,7 @@ public class Layout : MonoBehaviour
     public class Station
     {
         public string Name;
+        public int CarLimit;
         public string[] CargoImport, CargoExport;
     }
 
@@ -49,7 +65,7 @@ public class Layout : MonoBehaviour
         public string Number;
         [Multiline]
         public string Description;
-        public string[] ValidCargo;
+        public string Type;
     }
 
     [ContextMenu("Load Data")]
@@ -57,6 +73,7 @@ public class Layout : MonoBehaviour
     {
         layout = JsonUtility.FromJson<LayoutConfig>(layoutJSON.text);
         layoutState = JsonUtility.FromJson<LayoutState>(stateJSON.text);
+        industryConfig = JsonUtility.FromJson<IndustryConfig>(industryJSON.text);
     }
 
     [ContextMenu("Save Data")]
@@ -64,6 +81,7 @@ public class Layout : MonoBehaviour
     {
         File.WriteAllText(AssetDatabase.GetAssetPath(layoutJSON), JsonUtility.ToJson(layout));
         File.WriteAllText(AssetDatabase.GetAssetPath(stateJSON), JsonUtility.ToJson(layoutState));
+        File.WriteAllText(AssetDatabase.GetAssetPath(industryJSON), JsonUtility.ToJson(industryConfig));
     }
 
     [ContextMenu("Clear Loaded Data")]
@@ -73,7 +91,9 @@ public class Layout : MonoBehaviour
         layoutState = null;
     }
 
-    [ContextMenu("Create State Scaffold")]
+    [ContextMenu("------------")]public void Nothing(){}
+
+    [ContextMenu("Reset State")]
     public void CreateStateScaffold()
     {
         layoutState = new LayoutState();

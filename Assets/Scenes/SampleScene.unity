@@ -315,20 +315,15 @@ MonoBehaviour:
     - Name: Interchange
       CarLimit: 10
       CargoImport:
-      - stone
-      - wood
-      - yeast
-      - steel
-      CargoExport:
       - food
       - bricks
       - furniture
       - sake
-      - iron
-      - steel
-      - wood
-      - yeast
+      CargoExport:
       - stone
+      - steel
+      - yeast
+      - wood
     - Name: Brewery
       CarLimit: 4
       CargoImport:
@@ -412,6 +407,8 @@ MonoBehaviour:
       CarsPresent:
       - D&H 16509
       - ATSF 4336
+      - BN 574689
+      - NH 35143
     - Name: Brickworks
       CarsPresent:
       - UP 9215

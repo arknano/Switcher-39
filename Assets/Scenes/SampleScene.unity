@@ -305,34 +305,35 @@ MonoBehaviour:
   industryJSON: {fileID: 4900000, guid: 80e0457fac2be5e48a494a9e233e2290, type: 3}
   layout:
     LayoutName: Miyamori Branch Line
+    InitialSeed: 4
     Stations:
     - Name: Miyamori Station
-      CarLimit: 4
+      CarLimit: 5
       CargoImport:
       - food
       CargoExport:
       - rice
     - Name: Interchange
-      CarLimit: 10
+      CarLimit: 8
       CargoImport:
       - food
       - bricks
       - furniture
       - sake
       CargoExport:
-      - stone
       - steel
-      - yeast
       - wood
+      - yeast
+      - stone
     - Name: Brewery
-      CarLimit: 4
+      CarLimit: 5
       CargoImport:
       - rice
       - yeast
       CargoExport:
       - sake
     - Name: Furniture Factory
-      CarLimit: 4
+      CarLimit: 3
       CargoImport:
       - wood
       - steel
@@ -345,16 +346,16 @@ MonoBehaviour:
       CargoExport:
       - bricks
     - Name: Food Factory
-      CarLimit: 4
+      CarLimit: 5
       CargoImport:
       - rice
       CargoExport:
       - food
     Cars:
-    - Number: BN 574689
+    - Number: BN 574689A
       Description: 50ft Black Gondola
       Type: Gondola
-    - Number: BN 574689
+    - Number: BN 574689B
       Description: 50ft Black Gondola
       Type: Gondola
     - Number: D&H 16509
@@ -394,12 +395,10 @@ MonoBehaviour:
       CarsPresent: []
     - Name: Interchange
       CarsPresent:
-      - BN 574689
-      - BN 574689
+      - BN 574689A
+      - BN 574689B
       - NH 35143
       - PRR 82023
-      - NYC 70096
-      - CP 285605
     - Name: Brewery
       CarsPresent:
       - RI 20039
@@ -407,15 +406,15 @@ MonoBehaviour:
       CarsPresent:
       - D&H 16509
       - ATSF 4336
-      - BN 574689
-      - NH 35143
     - Name: Brickworks
       CarsPresent:
+      - NYC 70096
       - UP 9215
     - Name: Food Factory
       CarsPresent:
       - GM&O 21587
       - NKP 85499
+      - CP 285605
   industryConfig:
     IdleChance: 0.3
     CarTypes:

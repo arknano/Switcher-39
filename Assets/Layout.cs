@@ -47,6 +47,7 @@ public class Layout : MonoBehaviour
     public class LayoutConfig
     {
         public string LayoutName;
+        public int InitialSeed;
         public Station[] Stations;
         public Car[] Cars;
     }
@@ -72,7 +73,6 @@ public class Layout : MonoBehaviour
     public void LoadData()
     {
         layout = JsonUtility.FromJson<LayoutConfig>(layoutJSON.text);
-        layoutState = JsonUtility.FromJson<LayoutState>(stateJSON.text);
         industryConfig = JsonUtility.FromJson<IndustryConfig>(industryJSON.text);
     }
 
@@ -80,7 +80,6 @@ public class Layout : MonoBehaviour
     public void SaveData()
     {
         File.WriteAllText(AssetDatabase.GetAssetPath(layoutJSON), JsonUtility.ToJson(layout));
-        File.WriteAllText(AssetDatabase.GetAssetPath(stateJSON), JsonUtility.ToJson(layoutState));
         File.WriteAllText(AssetDatabase.GetAssetPath(industryJSON), JsonUtility.ToJson(industryConfig));
     }
 
@@ -93,6 +92,18 @@ public class Layout : MonoBehaviour
 
     [ContextMenu("------------")]public void Nothing(){}
 
+    [ContextMenu("Load State")]
+    public void LoadState()
+    {
+        layoutState = JsonUtility.FromJson<LayoutState>(stateJSON.text);
+    }
+
+    [ContextMenu("Save State")]
+    public void SaveState()
+    {
+        File.WriteAllText(AssetDatabase.GetAssetPath(stateJSON), JsonUtility.ToJson(layoutState));
+    }
+
     [ContextMenu("Reset State")]
     public void CreateStateScaffold()
     {
@@ -103,5 +114,6 @@ public class Layout : MonoBehaviour
             stations.Add(new StationState(item.Name));
         }
         layoutState.StationStates = stations.ToArray();
+        layoutState.Seed = layout.InitialSeed;
     }
 }

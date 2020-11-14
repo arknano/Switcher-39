@@ -21,7 +21,6 @@ public class SwitchlistGenerator : MonoBehaviour
             //Pick a random valid cargo this car carries
             string[] validCargo = GetValidCarTypeCargo(item.Type);
             string cargoType = validCargo[Random.Range(0, validCargo.Length)];
-            print(cargoType);
 
             //Get a station with space that exports this cargo
             string targetStation = GetValidStation(cargoType, item.Number, false);
@@ -34,67 +33,135 @@ public class SwitchlistGenerator : MonoBehaviour
     [ContextMenu("Generate new switchlist.")]
     public void GenerateNewSwitchlist()
     {
+        print("STARTING NEW DAY");
         Random.InitState(layout.layoutState.Seed);
+
+        //Get all the cars on the layout
+        var allCars = new List<MovingCar>();
         foreach (var station in layout.layoutState.StationStates)
         {
             foreach (var car in station.CarsPresent)
             {
-                //Early exit if the car isn't moving today
-                var chance = Random.value;
-                if (chance < layout.industryConfig.IdleChance)
-                {
-                    Debug.LogError(car + " is staying put today. (" +chance+")");
-                    continue;
-                }
-
-                //Create the switchmove object
-                SwitchMove move = new SwitchMove();
-                move.CurrentLocation = station.Name;
-                move.CarNumber = car;
-
-                var stationRef = layout.layout.Stations.FirstOrDefault(b => b.Name == station.Name);
-
-                //Jumble the list of exported cargo
-                System.Random rnd = new System.Random();
-                string[] randomExportCargo = stationRef.CargoExport.OrderBy(x => rnd.Next()).ToArray();
-                string cargo = "";
-                foreach (var rndCargo in randomExportCargo)
-                {
-                    //Check if the car takes this cargo
-                    if (GetValidCarTypeCargo(layout.layout.Cars.FirstOrDefault(b => b.Number == car).Type).Contains(rndCargo))
-                    {
-                        //If it does, proceed with this cargo
-                        cargo = rndCargo;
-                        move.Cargo = rndCargo;
-                        break;
-                    }
-                }
-
-                string targetStation = "";
-
-                //If the car doesn't take any of the export cargo, find some other station that exports valid cargo for a logistics move
-                if (cargo == "")
-                {
-                    //Pick a random valid cargo this car carries
-                    string[] validCargo = GetValidCarTypeCargo(layout.layout.Cars.FirstOrDefault(b => b.Number == car).Type);
-                    string cargoType = validCargo[Random.Range(0, validCargo.Length)];
-
-                    //Get a station with space that exports this cargo
-                    targetStation = GetValidStation(cargoType, car, false);
-                    move.Cargo = "empty";
-                }
-                //otherwise, proceed with the cargo we picked earlier
-                else
-                {
-                    targetStation = GetValidStation(cargo, car, true);
-                }
-
-                move.TargetLocation = targetStation;
-                Debug.LogWarning(string.Format("{0} FROM {1} TO {2} CARGO {3}", move.CarNumber, move.CurrentLocation, move.TargetLocation, cargo));
-                MoveCar(car, targetStation, station.Name);
+                var movingCar = new MovingCar();
+                movingCar.CarName = car;
+                movingCar.PreviousStation = station.Name;
+                allCars.Add(movingCar);
             }
         }
+        
+        //Work out which cars are actually moving today
+        allCars = GetMovingCars(allCars);
+        //print("Cars moving: " + allCars);
+        //Clear moving cars from their current stations (so they're not counted as present)
+        foreach (var item in allCars)
+        {
+            layout.layoutState.StationStates.FirstOrDefault(b => b.Name == item.PreviousStation).CarsPresent.Remove(item.CarName);
+        }
+        
+        //Send the cars to their new destination
+        foreach (var car in allCars)
+        {
+            print(car.CarName + " is starting move logic.");
+            //Create the switchmove object
+            SwitchMove move = new SwitchMove();
+            move.CurrentLocation = car.PreviousStation;
+            move.CarNumber = car.CarName;
+
+            var stationRef = layout.layout.Stations.FirstOrDefault(b => b.Name == car.PreviousStation);
+
+            //Jumble the list of exported cargo
+            System.Random rnd = new System.Random();
+            string[] randomExportCargo = stationRef.CargoExport.OrderBy(x => rnd.Next()).ToArray();
+            string cargo = "";
+            string targetStation = "";
+            foreach (var rndCargo in randomExportCargo)
+            {
+                print(car.CarName + " is testing export for " + rndCargo);
+                //Check if the car takes this cargo
+                if (GetValidCarTypeCargo(layout.layout.Cars.FirstOrDefault(b => b.Number == car.CarName).Type).Contains(rndCargo))
+                {
+                    //Find a random station that will recieve this cargo
+                    targetStation = GetValidStation(rndCargo, car.CarName, true);
+
+                    //if there's no recieving stations, skip to the next cargo
+                    if (targetStation == "") continue;
+
+                    //Otherwise, we're good to go, so let's proceed with that cargo and station
+                    cargo = rndCargo;
+                    move.Cargo = rndCargo;
+                    print(car.CarName + " selected " + rndCargo);
+                    break;
+                }
+            }
+
+
+
+            //If we've failed to find a station that will take valid cargo, find some other station that exports valid cargo for a logistics move
+            if (cargo == "" || targetStation == "")
+            {
+                print(car.CarName + " has no valid export. Starting logistics move search.");
+                //Randomly sort the cargo this car carries
+                string[] validCargo = GetValidCarTypeCargo(layout.layout.Cars.FirstOrDefault(b => b.Number == car.CarName).Type).OrderBy(x => rnd.Next()).ToArray();
+                
+                //Check the cargo for free stations
+                foreach (var item in validCargo)
+                {
+                    print(car.CarName + " is testing logistics move for " + item);
+                    targetStation = GetValidStation(item, car.CarName, false);
+                    
+                    if (targetStation != "")
+                    {
+                        print(car.CarName + " found logistics move to   " + targetStation);
+                        move.Cargo = "empty";
+                        break;
+                    }
+                    else
+                    {
+                        print(car.CarName + " found no valid station for logistics move that exports  " + item);
+                    }
+
+                       
+                }
+            }
+
+            move.TargetLocation = targetStation;
+            if (targetStation == "")
+            {
+                Debug.LogError(car.CarName + " totally failed to find a move and is staying put.");
+                MoveCar(car.CarName, car.PreviousStation);
+                continue;
+            }
+            
+            MoveCar(car.CarName, targetStation);
+            Debug.LogWarning(string.Format("{0} FROM {1} TO {2} CARGO {3}", move.CarNumber, move.CurrentLocation, move.TargetLocation, move.Cargo));
+        }
+
         layout.layoutState.Seed++;
+    }
+
+
+    /// <param name="cars">A list of cars</param>
+    /// <returns>The randomly selected cars (based on idlechance) that will move today</returns>
+    List<MovingCar> GetMovingCars(List<MovingCar> cars)
+    {
+        var movingCars = new List<MovingCar>();
+        foreach (var car in cars)
+        {
+            var chance = Random.value;
+            if (chance < layout.industryConfig.IdleChance)
+            {
+                Debug.LogWarning(car.CarName + " is staying put today. (" + chance + ")");
+                continue;
+            }
+            movingCars.Add(car);
+        }
+        return movingCars;
+    }
+
+    [System.Serializable]
+    public class MovingCar
+    {
+        public string CarName, PreviousStation;
     }
 
     /// <summary>
@@ -102,7 +169,7 @@ public class SwitchlistGenerator : MonoBehaviour
     /// </summary>
     /// <param name="car">The car being moved</param>
     /// <param name="station">The target station</param>
-    void MoveCar(string car, string station, string previousStation)
+    void MoveCar(string car, string station)
     {
         //Grab the index of the station in the state array
         var state = layout.layoutState.StationStates;
@@ -121,8 +188,8 @@ public class SwitchlistGenerator : MonoBehaviour
         if (stationList.Length == 0)
         {
             string importexport = importing ? "import" : "export";
-            Debug.LogError("There are no valid " + importexport + " stations for car " + carNumber + ". Skipping.");
-            return null;
+            //Debug.LogError("There are no valid " + importexport + " stations for car " + carNumber + " carrying " + cargoType + ". Skipping.");
+            return "";
         }
         //Pick a random station from that list
         return stationList[Random.Range(0, stationList.Length)];

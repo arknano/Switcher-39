@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -34,6 +34,7 @@ public class SwitchlistGenerator : MonoBehaviour
     public void GenerateNewSwitchlist()
     {
         print("STARTING NEW DAY");
+        List<SwitchMove> switchList = new List<SwitchMove>();
         Random.InitState(layout.layoutState.Seed);
 
         //Get all the cars on the layout
@@ -109,10 +110,10 @@ public class SwitchlistGenerator : MonoBehaviour
                     print(car.CarName + " is testing logistics move for " + item);
                     targetStation = GetValidStation(item, car.CarName, false);
                     
-                    if (targetStation != "")
+                    if (targetStation != "" && targetStation != car.PreviousStation)
                     {
                         print(car.CarName + " found logistics move to   " + targetStation);
-                        move.Cargo = "empty";
+                        move.Cargo = "―――";
                         break;
                     }
                     else
@@ -134,8 +135,9 @@ public class SwitchlistGenerator : MonoBehaviour
             
             MoveCar(car.CarName, targetStation);
             Debug.LogWarning(string.Format("{0} FROM {1} TO {2} CARGO {3}", move.CarNumber, move.CurrentLocation, move.TargetLocation, move.Cargo));
+            switchList.Add(move);
         }
-
+        GenerateSwitchListFile(switchList);
         layout.layoutState.Seed++;
     }
 
@@ -246,5 +248,16 @@ public class SwitchlistGenerator : MonoBehaviour
     public class SwitchMove
     {
         public string CarNumber, CurrentLocation, TargetLocation, Cargo;
+    }
+
+    public void GenerateSwitchListFile(List<SwitchMove> moves)
+    {
+        string tsv = "";
+        foreach (var move in moves)
+        {
+            string[] name = move.CarNumber.Split(' ');
+            tsv += string.Format("{0}\t{1}\t{2}\t{3}\t{4}\n", name[0], name[1], move.CurrentLocation, move.TargetLocation, move.Cargo);
+        }
+        System.IO.File.WriteAllText(System.DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss") + ".tsv", tsv, System.Text.Encoding.Unicode);
     }
 }

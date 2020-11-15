@@ -308,49 +308,49 @@ MonoBehaviour:
     InitialSeed: 4
     Stations:
     - Name: Miyamori Station
-      CarLimit: 5
-      CargoImport:
-      - food
-      CargoExport:
-      - rice
-    - Name: Interchange
-      CarLimit: 8
-      CargoImport:
-      - food
-      - bricks
-      - furniture
-      - sake
-      CargoExport:
-      - steel
-      - wood
-      - yeast
-      - stone
-    - Name: Brewery
-      CarLimit: 5
-      CargoImport:
-      - rice
-      - yeast
-      CargoExport:
-      - sake
-    - Name: Furniture Factory
-      CarLimit: 3
-      CargoImport:
-      - wood
-      - steel
-      CargoExport:
-      - furniture
-    - Name: Brickworks
       CarLimit: 4
       CargoImport:
-      - stone
+      - FOOD
       CargoExport:
-      - bricks
-    - Name: Food Factory
-      CarLimit: 5
+      - RICE
+    - Name: Yasuhara Shuzo
+      CarLimit: 4
       CargoImport:
-      - rice
+      - RICE
+      - YEAST
       CargoExport:
-      - food
+      - SAKE
+    - Name: Yano Furniture Ltd.
+      CarLimit: 2
+      CargoImport:
+      - WOOD
+      - STEEL
+      CargoExport:
+      - FURNITURE
+    - Name: Todo Brickworks
+      CarLimit: 3
+      CargoImport:
+      - STONE
+      CargoExport:
+      - BRICKS
+    - Name: Midori Bento Co.
+      CarLimit: 4
+      CargoImport:
+      - RICE
+      CargoExport:
+      - FOOD
+    - Name: Mainline Lead
+      CarLimit: 7
+      CargoImport:
+      - FOOD
+      - BRICKS
+      - FURNITURE
+      - SAKE
+      CargoExport:
+      - STEEL
+      - WOOD
+      - YEAST
+      - STONE
     Cars:
     - Number: BN 574689A
       Description: 50ft Black Gondola
@@ -389,69 +389,69 @@ MonoBehaviour:
       Description: 40ft Silver Reefer
       Type: Reefer
   layoutState:
-    Seed: 4
+    Seed: 9
     StationStates:
     - Name: Miyamori Station
-      CarsPresent: []
-    - Name: Interchange
       CarsPresent:
-      - BN 574689A
-      - BN 574689B
-      - NH 35143
-      - PRR 82023
-    - Name: Brewery
-      CarsPresent:
-      - RI 20039
-    - Name: Furniture Factory
-      CarsPresent:
-      - D&H 16509
+      - UP 9215
       - ATSF 4336
-    - Name: Brickworks
+      - NH 35143
+    - Name: Yasuhara Shuzo
+      CarsPresent:
+      - PRR 82023
+      - CP 285605
+    - Name: Yano Furniture Ltd.
       CarsPresent:
       - NYC 70096
-      - UP 9215
-    - Name: Food Factory
+      - RI 20039
+    - Name: Todo Brickworks
+      CarsPresent:
+      - BN 574689A
+    - Name: Midori Bento Co.
       CarsPresent:
       - GM&O 21587
+    - Name: Mainline Lead
+      CarsPresent:
       - NKP 85499
-      - CP 285605
+      - D&H 16509
+      - BN 574689B
   industryConfig:
-    IdleChance: 0.3
+    IdleChance: 0.1
     CarTypes:
     - TypeName: Boxcar
       ValidCargo:
-      - food
-      - bricks
-      - wood
-      - furniture
-      - sake
-      - rice
+      - FOOD
+      - BRICKS
+      - WOOD
+      - FURNITURE
+      - SAKE
+      - RICE
     - TypeName: Reefer
       ValidCargo:
-      - food
-      - yeast
+      - FOOD
+      - YEAST
     - TypeName: Gondola
       ValidCargo:
-      - steel
-      - iron
-      - coal
-      - stone
-      - wood
-      - bricks
+      - STEEL
+      - IRON
+      - COAL
+      - STONE
+      - WOOD
+      - BRICKS
     - TypeName: Flatcar
       ValidCargo:
-      - steel
-      - bricks
-      - furniture
-      - wood
+      - STEEL
+      - BRICKS
+      - FURNITURE
+      - WOOD
     - TypeName: Hopper
       ValidCargo:
-      - rice
-      - grain
+      - RICE
+      - GRAIN
     - TypeName: Tanker
       ValidCargo:
-      - oil
-      - fuel
+      - OIL
+      - FUEL
 --- !u!4 &381608111
 Transform:
   m_ObjectHideFlags: 0

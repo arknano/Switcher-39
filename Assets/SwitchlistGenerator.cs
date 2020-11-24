@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class SwitchlistGenerator : MonoBehaviour
 {
@@ -23,7 +21,7 @@ public class SwitchlistGenerator : MonoBehaviour
             string cargoType = validCargo[Random.Range(0, validCargo.Length)];
 
             //Get a station with space that exports this cargo
-            string targetStation = GetValidStation(cargoType, item.Number, false);
+            string targetStation = GetValidStation(cargoType, false);
 
             //Update the state
             MoveCar(item.Number, targetStation);
@@ -43,9 +41,7 @@ public class SwitchlistGenerator : MonoBehaviour
         {
             foreach (var car in station.CarsPresent)
             {
-                var movingCar = new MovingCar();
-                movingCar.CarName = car;
-                movingCar.PreviousStation = station.Name;
+                var movingCar = new MovingCar {CarName = car, PreviousStation = station.Name};
                 allCars.Add(movingCar);
             }
         }
@@ -65,9 +61,7 @@ public class SwitchlistGenerator : MonoBehaviour
         {
             print(car.CarName + " is starting move logic.");
             //Create the switchmove object
-            SwitchMove move = new SwitchMove();
-            move.CurrentLocation = car.PreviousStation;
-            move.CarNumber = car.CarName;
+            SwitchMove move = new SwitchMove {CurrentLocation = car.PreviousStation, CarNumber = car.CarName};
 
             var stationRef = layout.layout.Stations.FirstOrDefault(b => b.Name == car.PreviousStation);
 
@@ -83,7 +77,7 @@ public class SwitchlistGenerator : MonoBehaviour
                 if (GetValidCarTypeCargo(layout.layout.Cars.FirstOrDefault(b => b.Number == car.CarName).Type).Contains(rndCargo))
                 {
                     //Find a random station that will recieve this cargo
-                    targetStation = GetValidStation(rndCargo, car.CarName, true);
+                    targetStation = GetValidStation(rndCargo, true);
 
                     //if there's no recieving stations, skip to the next cargo
                     if (targetStation == "") continue;
@@ -109,7 +103,7 @@ public class SwitchlistGenerator : MonoBehaviour
                 foreach (var item in validCargo)
                 {
                     print(car.CarName + " is testing logistics move for " + item);
-                    targetStation = GetValidStation(item, car.CarName, false);
+                    targetStation = GetValidStation(item, false);
                     
                     if (targetStation != "" && targetStation != car.PreviousStation)
                     {
@@ -138,16 +132,18 @@ public class SwitchlistGenerator : MonoBehaviour
             }
             
             MoveCar(car.CarName, targetStation);
-            Debug.LogWarning(string.Format("{0} FROM {1} TO {2} CARGO {3}", move.CarNumber, move.CurrentLocation, move.TargetLocation, move.Cargo));
+            Debug.LogWarning($"{move.CarNumber} FROM {move.CurrentLocation} TO {move.TargetLocation} CARGO {move.Cargo}");
             switchList.Add(move);
         }
         foreach (var car in stayingCars)
         {
-            SwitchMove move = new SwitchMove();
-            move.CurrentLocation = car.PreviousStation;
-            move.CarNumber = car.CarName;
-            move.Cargo = "―――";
-            move.TargetLocation = "―――";
+            SwitchMove move = new SwitchMove
+            {
+                CurrentLocation = car.PreviousStation,
+                CarNumber = car.CarName,
+                Cargo = "―――",
+                TargetLocation = "―――"
+            };
             switchList.Add(move);
         }
 
@@ -197,12 +193,6 @@ public class SwitchlistGenerator : MonoBehaviour
         return movingCars;
     }
 
-    [System.Serializable]
-    public class MovingCar
-    {
-        public string CarName, PreviousStation;
-    }
-
     /// <summary>
     /// Updates the layout state with this car at the target station
     /// </summary>
@@ -218,7 +208,10 @@ public class SwitchlistGenerator : MonoBehaviour
         state[stationIndex].CarsPresent.Add(car);
     }
 
-    string GetValidStation(string cargoType, string carNumber, bool importing)
+    /// <param name="cargoType">The cargo name</param>
+    /// <param name="importing">Check for imports (TRUE) or exports (FALSE)</param>
+    /// <returns>The name of a station that imports or exports matching cargo/returns>
+    string GetValidStation(string cargoType, bool importing)
     {
         //Get all the stations that service this cargo, that still have space.
         string[] stationList = FilterFullStations(GetAllStationsMatchingCargo(cargoType, importing));
@@ -226,7 +219,7 @@ public class SwitchlistGenerator : MonoBehaviour
         //Skip this car if we can't put it anywhere.
         if (stationList.Length == 0)
         {
-            string importexport = importing ? "import" : "export";
+            //string importexport = importing ? "import" : "export";
             //Debug.LogError("There are no valid " + importexport + " stations for car " + carNumber + " carrying " + cargoType + ". Skipping.");
             return "";
         }
@@ -281,12 +274,6 @@ public class SwitchlistGenerator : MonoBehaviour
         return layout.industryConfig.CarTypes.FirstOrDefault(b => b.TypeName == carType).ValidCargo;
     }
 
-    [System.Serializable]
-    public class SwitchMove
-    {
-        public string CarNumber, CurrentLocation, TargetLocation, Cargo;
-    }
-
     public void GenerateSwitchListFile(List<SwitchMove> moves)
     {
         string tsv = "";
@@ -298,5 +285,17 @@ public class SwitchlistGenerator : MonoBehaviour
         string filename = System.DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss") + ".tsv";
         System.IO.File.WriteAllText(filename, tsv, System.Text.Encoding.Unicode);
         Debug.Log("Switchlist saved to " + filename);
+    }
+
+    [System.Serializable]
+    public class SwitchMove
+    {
+        public string CarNumber, CurrentLocation, TargetLocation, Cargo;
+    }
+
+    [System.Serializable]
+    public class MovingCar
+    {
+        public string CarName, PreviousStation;
     }
 }

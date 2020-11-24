@@ -49,9 +49,10 @@ public class SwitchlistGenerator : MonoBehaviour
                 allCars.Add(movingCar);
             }
         }
-        
+
         //Work out which cars are actually moving today
-        allCars = GetMovingCars(allCars);
+        List<MovingCar> stayingCars = new List<MovingCar>();
+        allCars = GetMovingCars(allCars, out stayingCars);
         //print("Cars moving: " + allCars);
         //Clear moving cars from their current stations (so they're not counted as present)
         foreach (var item in allCars)
@@ -130,6 +131,9 @@ public class SwitchlistGenerator : MonoBehaviour
             {
                 Debug.LogError(car.CarName + " totally failed to find a move and is staying put.");
                 MoveCar(car.CarName, car.PreviousStation);
+                move.Cargo = "―――";
+                move.TargetLocation = "―――";
+                switchList.Add(move);
                 continue;
             }
             
@@ -137,26 +141,59 @@ public class SwitchlistGenerator : MonoBehaviour
             Debug.LogWarning(string.Format("{0} FROM {1} TO {2} CARGO {3}", move.CarNumber, move.CurrentLocation, move.TargetLocation, move.Cargo));
             switchList.Add(move);
         }
+        foreach (var car in stayingCars)
+        {
+            SwitchMove move = new SwitchMove();
+            move.CurrentLocation = car.PreviousStation;
+            move.CarNumber = car.CarName;
+            move.Cargo = "―――";
+            move.TargetLocation = "―――";
+            switchList.Add(move);
+        }
+
         GenerateSwitchListFile(switchList);
         layout.layoutState.Seed++;
+    }
+
+    [ContextMenu("Generate Current Positions List")]
+    public void GenerateCurrentPositionsList()
+    {
+        List<SwitchMove> switchList = new List<SwitchMove>();
+        foreach (var station in layout.layoutState.StationStates)
+        {
+            foreach (var car in station.CarsPresent)
+            {
+                SwitchMove move = new SwitchMove();
+                var movingCar = new MovingCar();
+                move.CarNumber = car;
+                move.CurrentLocation = station.Name;
+                move.Cargo = "―――";
+                move.TargetLocation = "―――";
+                switchList.Add(move);
+            }
+        }
+        GenerateSwitchListFile(switchList);
     }
 
 
     /// <param name="cars">A list of cars</param>
     /// <returns>The randomly selected cars (based on idlechance) that will move today</returns>
-    List<MovingCar> GetMovingCars(List<MovingCar> cars)
+    List<MovingCar> GetMovingCars(List<MovingCar> cars, out List<MovingCar> stayingCars)
     {
         var movingCars = new List<MovingCar>();
+        var remainingCars = new List<MovingCar>();
         foreach (var car in cars)
         {
             var chance = Random.value;
             if (chance < layout.industryConfig.IdleChance)
             {
                 Debug.LogWarning(car.CarName + " is staying put today. (" + chance + ")");
+                remainingCars.Add(car);
                 continue;
             }
             movingCars.Add(car);
         }
+        stayingCars = remainingCars;
         return movingCars;
     }
 
@@ -258,6 +295,8 @@ public class SwitchlistGenerator : MonoBehaviour
             string[] name = move.CarNumber.Split(' ');
             tsv += string.Format("{0}\t{1}\t{2}\t{3}\t{4}\n", name[0], name[1], move.CurrentLocation, move.TargetLocation, move.Cargo);
         }
-        System.IO.File.WriteAllText(System.DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss") + ".tsv", tsv, System.Text.Encoding.Unicode);
+        string filename = System.DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss") + ".tsv";
+        System.IO.File.WriteAllText(filename, tsv, System.Text.Encoding.Unicode);
+        Debug.Log("Switchlist saved to " + filename);
     }
 }
